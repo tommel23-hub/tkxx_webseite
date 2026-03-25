@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Control Tower | tkxx*</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --tk-primary:#0078DC;--tk-dark:#003C7D;--tk-sky:#00A0F5;--tk-cyan:#00E3E3;
+  --tk-light:#73C3F0;--tk-silver:#D9DEE8;--tk-dg:#4B5564;--tk-mg:#78879B;
+  --tk-black:#000;--tk-white:#fff;
+  --ease:0.45s cubic-bezier(0.4,0,0.2,1);--r:14px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',Arial,sans-serif;background:var(--tk-dark);color:var(--tk-white);overflow-x:hidden}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:900;
+  padding:0.9rem 2rem;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(0,40,100,0.88);backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(0,163,245,0.18);
+}
+.nav-logo{display:flex;align-items:center;gap:0.6rem;text-decoration:none;cursor:pointer}
+.logo-svg{width:36px;height:36px}
+.logo-name{font-size:1.4rem;font-weight:900;color:#fff;letter-spacing:-0.03em}
+.logo-name span{color:var(--tk-cyan)}
+.nav-links{display:flex;gap:0.3rem;align-items:center;list-style:none}
+.nav-links button{background:none;border:none;color:rgba(255,255,255,0.78);padding:0.45rem 1rem;border-radius:6px;font-size:0.875rem;font-weight:500;cursor:pointer;transition:all 0.25s}
+.nav-links button:hover{color:#fff;background:rgba(255,255,255,0.08)}
+.nav-cta{background:var(--tk-primary) !important;color:#fff !important;font-weight:600 !important}
+.nav-cta:hover{background:var(--tk-sky) !important}
+
+/* PANELS */
+.panel{
+  position:fixed;inset:0;z-index:500;overflow-y:auto;
+  opacity:0;pointer-events:none;
+  transform:translateX(60px);
+  transition:opacity var(--ease),transform var(--ease);
+  background:var(--tk-dark);
+}
+.panel.active{opacity:1;pointer-events:all;transform:translateX(0)}
+
+/* ── HERO ── */
+#hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+.hero-bg{
+  position:absolute;inset:0;
+  background:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1920&q=80') center/cover;
+  transform:scale(1.08);will-change:transform;
+}
+.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,40,100,0.92) 0%,rgba(0,100,200,0.68) 55%,rgba(0,40,100,0.93) 100%)}
+.hero-content{position:relative;z-index:2;text-align:center;max-width:860px;padding:0 2rem}
+.hero-eye{font-size:0.78rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--tk-cyan);margin-bottom:1rem;opacity:0;animation:fu 0.8s 0.3s forwards}
+.hero-h1{font-size:clamp(2.8rem,7.5vw,5.6rem);font-weight:900;line-height:1.02;letter-spacing:-0.035em;color:#fff;margin-bottom:1.4rem;opacity:0;animation:fu 0.8s 0.5s forwards}
+.hero-h1 em{color:var(--tk-cyan);font-style:normal}
+.hero-sub{font-size:clamp(0.95rem,1.8vw,1.2rem);color:rgba(255,255,255,0.75);max-width:600px;margin:0 auto 2.8rem;line-height:1.65;opacity:0;animation:fu 0.8s 0.7s forwards}
+
+/* Pillars */
+.pillars{display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;opacity:0;animation:fu 0.8s 0.9s forwards}
+.pillar{
+  background:rgba(255,255,255,0.07);backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.13);border-radius:var(--r);
+  padding:1.8rem 2.2rem;cursor:pointer;transition:all 0.3s;
+  min-width:180px;text-align:center;position:relative;overflow:hidden;
+}
+.pillar::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,120,220,0.28),rgba(0,163,245,0.08));opacity:0;transition:opacity 0.3s}
+.pillar:hover{border-color:var(--tk-sky);transform:translateY(-5px);box-shadow:0 18px 55px rgba(0,100,200,0.32)}
+.pillar:hover::before{opacity:1}
+.pillar svg{display:block;margin:0 auto 1rem;color:var(--tk-cyan)}
+.pillar-t{font-size:1rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase}
+.pillar-s{font-size:0.75rem;color:rgba(255,255,255,0.55);margin-top:0.3rem}
+
+/* Circle Navigator */
+.circle-nav{
+  position:absolute;right:4%;top:50%;transform:translateY(-50%);
+  width:200px;height:200px;pointer-events:none;
+  opacity:0;animation:fi 1.2s 1.3s forwards;
+}
+@media(max-width:900px){.circle-nav{display:none}}
+
+/* Stats */
+.hero-stats{
+  position:absolute;bottom:0;left:0;right:0;
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid rgba(255,255,255,0.1);
+  background:rgba(0,20,70,0.6);backdrop-filter:blur(12px);
+  z-index:2;
+}
+@media(max-width:600px){.hero-stats{grid-template-columns:repeat(2,1fr)}}
+.stat{padding:1.4rem;text-align:center}
+.stat-n{font-size:2rem;font-weight:900;color:var(--tk-cyan);line-height:1}
+.stat-l{font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:0.3rem;letter-spacing:0.05em}
+
+/* ── L1 PANELS ── */
+.l1{padding:7rem 2rem 5rem}
+.ph{max-width:1380px;margin:0 auto 2.5rem;display:flex;align-items:center;gap:1.4rem}
+.back-btn{
+  display:flex;align-items:center;gap:0.45rem;
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);
+  color:#fff;padding:0.55rem 1.1rem;border-radius:8px;cursor:pointer;
+  font-size:0.85rem;font-weight:500;transition:all 0.25s;white-space:nowrap;
+}
+.back-btn:hover{background:rgba(0,120,220,0.25);border-color:var(--tk-sky)}
+.bc{font-size:0.75rem;color:rgba(255,255,255,0.45);margin-bottom:0.3rem}
+.bc a{color:var(--tk-sky);text-decoration:none;cursor:pointer}
+.bc a:hover{text-decoration:underline}
+.ph h2{font-size:2.2rem;font-weight:900;color:#fff}
+.ph h2 span{color:var(--tk-cyan)}
+
+/* Services Grid */
+.svc-grid{max-width:1380px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1.3rem}
+.svc-card{
+  background:rgba(255,255,255,0.045);border:1px solid rgba(255,255,255,0.09);
+  border-radius:var(--r);padding:1.9rem;cursor:pointer;
+  transition:background 0.3s,border-color 0.3s,transform 0.3s,box-shadow 0.3s;
+  position:relative;overflow:hidden;
+}
+.svc-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--tk-primary),var(--tk-cyan));transform:scaleX(0);transition:transform 0.3s;transform-origin:left}
+.svc-card:hover{background:rgba(0,120,220,0.14);border-color:rgba(0,120,220,0.38);transform:translateY(-4px);box-shadow:0 18px 50px rgba(0,50,120,0.38)}
+.svc-card:hover::after{transform:scaleX(1)}
+.svc-icon{width:52px;height:52px;background:linear-gradient(135deg,rgba(0,120,220,0.28),rgba(0,227,227,0.15));border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:1.3rem;color:var(--tk-cyan)}
+.svc-arr{position:absolute;top:1.4rem;right:1.4rem;color:var(--tk-sky);opacity:0;transform:translateX(-6px);transition:all 0.25s}
+.svc-card:hover .svc-arr{opacity:1;transform:translateX(0)}
+.svc-t{font-size:1.1rem;font-weight:700;margin-bottom:0.6rem}
+.svc-d{font-size:0.875rem;color:rgba(255,255,255,0.58);line-height:1.6}
+
+/* Platforms Grid */
+.plt-grid{max-width:1380px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:1.8rem}
+.plt-card{
+  background:linear-gradient(145deg,rgba(0,55,120,0.85),rgba(0,25,70,0.92));
+  border:1px solid rgba(0,163,245,0.18);border-radius:var(--r);
+  padding:2.3rem;transition:all 0.3s;position:relative;overflow:hidden;
+}
+.plt-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--tk-primary),var(--tk-cyan))}
+.plt-card:hover{transform:translateY(-6px);box-shadow:0 24px 70px rgba(0,100,200,0.38);border-color:rgba(0,163,245,0.4)}
+.plt-logo{
+  width:72px;height:36px;background:rgba(255,255,255,0.09);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.7rem;font-weight:600;color:rgba(255,255,255,0.45);margin-bottom:1.3rem;
+}
+.plt-name{font-size:1.3rem;font-weight:800;margin-bottom:0.4rem}
+.plt-tag{font-size:0.78rem;color:var(--tk-cyan);font-weight:600;letter-spacing:0.06em;margin-bottom:0.9rem;text-transform:uppercase}
+.plt-desc{font-size:0.875rem;color:rgba(255,255,255,0.62);line-height:1.7;margin-bottom:1.5rem}
+.cta{
+  display:inline-flex;align-items:center;gap:0.45rem;
+  background:var(--tk-primary);color:#fff;padding:0.55rem 1.3rem;
+  border-radius:7px;font-size:0.83rem;font-weight:600;border:none;cursor:pointer;
+  transition:background 0.25s,transform 0.2s;text-decoration:none;
+}
+.cta:hover{background:var(--tk-sky);transform:translateX(2px)}
+
+/* Industries Grid */
+.ind-grid{max-width:1380px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:1.3rem}
+.ind-card{border-radius:var(--r);overflow:hidden;height:270px;position:relative;cursor:pointer;transition:transform 0.3s,box-shadow 0.3s}
+.ind-card:hover{transform:scale(1.025);box-shadow:0 20px 55px rgba(0,0,0,0.42)}
+.ind-bg{position:absolute;inset:0;background-size:cover;background-position:center;transition:transform 0.6s}
+.ind-card:hover .ind-bg{transform:scale(1.09)}
+.ind-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,15,55,0.96) 0%,rgba(0,50,110,0.52) 50%,rgba(0,0,0,0.08) 100%)}
+.ind-cnt{position:absolute;bottom:0;left:0;right:0;padding:1.4rem}
+.ind-ico{width:36px;height:36px;background:rgba(0,227,227,0.18);border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--tk-cyan);margin-bottom:0.65rem}
+.ind-n{font-size:1.1rem;font-weight:700;margin-bottom:0.2rem}
+.ind-s{font-size:0.75rem;color:rgba(255,255,255,0.55)}
+
+/* ── L2 DETAIL ── */
+.l2{padding:7rem 2rem 5rem}
+.det-hero{max-width:1380px;margin:0 auto 3rem;border-radius:var(--r);overflow:hidden;height:260px;position:relative}
+.det-bg{position:absolute;inset:0;background-size:cover;background-position:center}
+.det-ov{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,40,110,0.96) 35%,rgba(0,60,130,0.55) 100%)}
+.det-hc{position:relative;z-index:2;padding:2.5rem;height:100%;display:flex;flex-direction:column;justify-content:flex-end}
+.det-eye{font-size:0.72rem;color:var(--tk-cyan);letter-spacing:0.22em;text-transform:uppercase;margin-bottom:0.4rem}
+.det-title{font-size:2.1rem;font-weight:900}
+.det-grid{max-width:1380px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:1.5rem}
+.cluster{
+  background:rgba(255,255,255,0.038);border:1px solid rgba(255,255,255,0.07);
+  border-radius:var(--r);padding:1.8rem;transition:background 0.25s,border-color 0.25s;
+}
+.cluster:hover{background:rgba(0,120,220,0.1);border-color:rgba(0,120,220,0.25)}
+.cl-t{font-size:1rem;font-weight:700;color:var(--tk-sky);margin-bottom:1.1rem;display:flex;align-items:center;gap:0.6rem}
+.cl-t svg{flex-shrink:0}
+.cl-list{list-style:none;display:flex;flex-direction:column;gap:0.55rem}
+.cl-list li{display:flex;align-items:flex-start;gap:0.65rem;font-size:0.875rem;color:rgba(255,255,255,0.72);line-height:1.45}
+.cl-list li::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--tk-cyan);flex-shrink:0;margin-top:0.5rem}
+
+/* FOOTER */
+footer{background:rgba(0,12,45,0.98);border-top:1px solid rgba(0,120,220,0.18);padding:3rem 2rem 1.8rem}
+.ft-inner{max-width:1380px;margin:0 auto}
+.ft-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:2.5rem;margin-bottom:2rem}
+.ft-brand .logo-name{font-size:1.8rem}
+.ft-tag{font-size:0.85rem;color:rgba(255,255,255,0.45);margin-top:0.4rem;max-width:280px}
+.ft-cols{display:flex;gap:3.5rem;flex-wrap:wrap}
+.ft-col h4{font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--tk-sky);margin-bottom:0.9rem}
+.ft-col ul{list-style:none;display:flex;flex-direction:column;gap:0.4rem}
+.ft-col a{color:rgba(255,255,255,0.52);text-decoration:none;font-size:0.85rem;transition:color 0.2s;cursor:pointer}
+.ft-col a:hover{color:var(--tk-sky)}
+.ft-bot{border-top:1px solid rgba(255,255,255,0.08);padding-top:1.4rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.ft-copy{font-size:0.76rem;color:rgba(255,255,255,0.35)}
+.socials{display:flex;gap:0.7rem}
+.soc{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.55);transition:all 0.25s;text-decoration:none;cursor:pointer}
+.soc:hover{background:rgba(0,120,220,0.28);border-color:var(--tk-sky);color:#fff}
+
+/* ANIMATIONS */
+@keyframes fu{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes card-in{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.card-anim{animation:card-in 0.45s ease both}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .nav-links li:not(:last-child){display:none}
+  .svc-grid,.plt-grid,.ind-grid,.det-grid{grid-template-columns:1fr}
+  .ind-grid{grid-template-columns:repeat(2,1fr)}
+  .ft-cols{gap:2rem}
+  .hero-stats{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:480px){
+  .ind-grid{grid-template-columns:1fr}
+  .pillars{flex-direction:column;align-items:center}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav aria-label="Hauptnavigation">
+  <div class="nav-logo" onclick="goHome()" aria-label="tkxx* Startseite" role="link" tabindex="0" onkeydown="if(event.key==='Enter')goHome()">
+    <svg class="logo-svg" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+      <circle cx="18" cy="18" r="16" stroke="#0078DC" stroke-width="1.5"/>
+      <circle cx="18" cy="18" r="9" fill="rgba(0,120,220,0.18)" stroke="#0078DC" stroke-width="1"/>
+      <circle cx="18" cy="18" r="3.5" fill="#00E3E3"><animate attributeName="r" values="3.5;4.5;3.5" dur="3s" repeatCount="indefinite"/></circle>
+      <line x1="18" y1="2" x2="18" y2="9" stroke="#00A0F5" stroke-width="1" opacity="0.5"/>
+      <line x1="18" y1="27" x2="18" y2="34" stroke="#00A0F5" stroke-width="1" opacity="0.5"/>
+      <line x1="2" y1="18" x2="9" y2="18" stroke="#00A0F5" stroke-width="1" opacity="0.5"/>
+      <line x1="27" y1="18" x2="34" y2="18" stroke="#00A0F5" stroke-width="1" opacity="0.5"/>
+    </svg>
+    <span class="logo-name">tkxx<span>*</span></span>
+  </div>
+  <ul class="nav-links" role="list">
+    <li><button onclick="showPanel('services')" aria-label="Services">Services</button></li>
+    <li><button onclick="showPanel('platforms')" aria-label="Platforms">Platforms</button></li>
+    <li><button onclick="showPanel('industries')" aria-label="Industries">Industries</button></li>
+    <li><button class="nav-cta" aria-label="Kontakt">Kontakt</button></li>
+  </ul>
+</nav>
+
+<!-- ═══════════════════════════════ HERO ═══════════════════════════════ -->
+<section id="hero" aria-label="Hero Bereich">
+  <div class="hero-bg" id="parallax-bg" role="img" aria-label="Modernes Supply Chain Operations Center"></div>
+
+  <div class="hero-content">
+    <p class="hero-eye">tkxx* · Global Portfolio</p>
+    <h1 class="hero-h1">Global <em>Control</em> Tower</h1>
+    <p class="hero-sub">End-to-end Supply Chain Visibility, Resilience und Digital Intelligence – über alle Tier-Ebenen Ihres globalen Liefernetzwerks.</p>
+
+    <div class="pillars" role="list">
+      <div class="pillar" role="listitem" tabindex="0" onclick="showPanel('services')" onkeydown="if(event.key==='Enter')showPanel('services')" aria-label="Services erkunden">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div class="pillar-t">Services</div><div class="pillar-s">5 Service-Cluster</div>
+      </div>
+      <div class="pillar" role="listitem" tabindex="0" onclick="showPanel('platforms')" onkeydown="if(event.key==='Enter')showPanel('platforms')" aria-label="Platforms erkunden">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        <div class="pillar-t">Platforms</div><div class="pillar-s">4 Digital Solutions</div>
+      </div>
+      <div class="pillar" role="listitem" tabindex="0" onclick="showPanel('industries')" onkeydown="if(event.key==='Enter')showPanel('industries')" aria-label="Industries erkunden">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <div class="pillar-t">Industries</div><div class="pillar-s">6 Sektoren</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Animated Circle Navigator -->
+  <div class="circle-nav" aria-hidden="true">
+    <svg viewBox="0 0 200 200" fill="none">
+      <defs>
+        <linearGradient id="cg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#0078DC"/>
+          <stop offset="50%" stop-color="#00E3E3"/>
+          <stop offset="100%" stop-color="#0078DC"/>
+        </linearGradient>
+      </defs>
+      <!-- Outer ring -->
+      <circle cx="100" cy="100" r="90" stroke="rgba(0,120,220,0.18)" stroke-width="1"/>
+      <circle cx="100" cy="100" r="90" stroke="url(#cg)" stroke-width="2" stroke-dasharray="565" stroke-linecap="round">
+        <animateTransform attributeName="transform" type="rotate" from="0 100 100" to="360 100 100" dur="22s" repeatCount="indefinite"/>
+      </circle>
+      <!-- Mid ring -->
+      <circle cx="100" cy="100" r="65" stroke="rgba(0,163,245,0.12)" stroke-width="1"/>
+      <!-- Inner fill -->
+      <circle cx="100" cy="100" r="44" fill="rgba(0,40,100,0.75)" stroke="rgba(0,120,220,0.35)" stroke-width="1"/>
+      <!-- Center pulse -->
+      <circle cx="100" cy="100" r="7" fill="#00E3E3">
+        <animate attributeName="r" values="7;9;7" dur="2.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="1;0.5;1" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+      <!-- ANALYZE node top -->
+      <g>
+        <circle cx="100" cy="10" r="20" fill="rgba(0,80,180,0.7)" stroke="#0078DC" stroke-width="1.2"/>
+        <text x="100" y="7" text-anchor="middle" fill="white" font-size="6.5" font-weight="700" font-family="Arial">ANA-</text>
+        <text x="100" y="15.5" text-anchor="middle" fill="white" font-size="6.5" font-weight="700" font-family="Arial">LYZE</text>
+        <line x1="100" y1="30" x2="100" y2="57" stroke="rgba(0,227,227,0.35)" stroke-width="1" stroke-dasharray="3,3"/>
+      </g>
+      <!-- DESIGN node bottom-right (~120deg) -->
+      <g transform="rotate(120 100 100)">
+        <circle cx="100" cy="10" r="20" fill="rgba(0,80,180,0.7)" stroke="#0078DC" stroke-width="1.2"/>
+        <text x="100" y="7" text-anchor="middle" fill="white" font-size="6.5" font-weight="700" font-family="Arial">DE-</text>
+        <text x="100" y="15.5" text-anchor="middle" fill="white" font-size="6.5" font-weight="700" font-family="Arial">SIGN</text>
+        <line x1="100" y1="30" x2="100" y2="57" stroke="rgba(0,227,227,0.35)" stroke-width="1" stroke-dasharray="3,3"/>
+      </g>
+      <!-- IMPLEMENT node bottom-left (~240deg) -->
+      <g transform="rotate(240 100 100)">
+        <circle cx="100" cy="10" r="20" fill="rgba(0,80,180,0.7)" stroke="#0078DC" stroke-width="1.2"/>
+        <text x="100" y="5.5" text-anchor="middle" fill="white" font-size="5.8" font-weight="700" font-family="Arial">IMPL-</text>
+        <text x="100" y="13" text-anchor="middle" fill="white" font-size="5.8" font-weight="700" font-family="Arial">EMENT</text>
+        <line x1="100" y1="30" x2="100" y2="57" stroke="rgba(0,227,227,0.35)" stroke-width="1" stroke-dasharray="3,3"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="hero-stats" aria-label="Kennzahlen">
+    <div class="stat"><div class="stat-n">50+</div><div class="stat-l">Globale Standorte</div></div>
+    <div class="stat"><div class="stat-n">6</div><div class="stat-l">Industrien</div></div>
+    <div class="stat"><div class="stat-n">4</div><div class="stat-l">Digital Platforms</div></div>
+    <div class="stat"><div class="stat-n">E2E</div><div class="stat-l">SC-Abdeckung</div></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ L1: SERVICES ═══════════════════════ -->
+<div id="panel-services" class="panel l1" role="main" aria-label="Services">
+  <div class="ph">
+    <button class="back-btn" onclick="goHome()" aria-label="Zurück zur Startseite">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Zurück
+    </button>
+    <div>
+      <div class="bc" aria-label="Brotkrumen-Navigation"><a onclick="goHome()" tabindex="0">Home</a> › Services</div>
+      <h2>Unsere <span>Services</span></h2>
+    </div>
+  </div>
+  <div class="svc-grid" role="list">
+    <!-- 1 -->
+    <div class="svc-card" role="listitem" tabindex="0" onclick="showDetail('materials')" onkeydown="if(event.key==='Enter')showDetail('materials')" aria-label="Materials Supply & Processing">
+      <div class="svc-arr" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      <div class="svc-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+      <div class="svc-t">Materials Supply &amp; Processing</div>
+      <div class="svc-d">Strategisches Sourcing, globale Liefernetzwerke, Qualitätsmanagement und Erstbearbeitung über alle Materialarten.</div>
+    </div>
+    <!-- 2 -->
+    <div class="svc-card" role="listitem" tabindex="0" onclick="showDetail('logistics')" onkeydown="if(event.key==='Enter')showDetail('logistics')" aria-label="Logistics & Fulfillment">
+      <div class="svc-arr" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      <div class="svc-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+      <div class="svc-t">Logistics &amp; Fulfillment</div>
+      <div class="svc-d">End-to-end 3PL-Services: Dedicated Transport, Multi-Client Warehousing, Kitting, JIT-Sequenzierung und Bonded Warehousing.</div>
+    </div>
+    <!-- 3 -->
+    <div class="svc-card" role="listitem" tabindex="0" onclick="showDetail('resilience')" onkeydown="if(event.key==='Enter')showDetail('resilience')" aria-label="Supply Chain Resilience">
+      <div class="svc-arr" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      <div class="svc-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div class="svc-t">Supply Chain Resilience</div>
+      <div class="svc-d">Multi-Tier-Transparenz, Predictive Planning, Forward Sensing und Regulatory Governance für robuste Lieferketten.</div>
+    </div>
+    <!-- 4 -->
+    <div class="svc-card" role="listitem" tabindex="0" onclick="showDetail('digital')" onkeydown="if(event.key==='Enter')showDetail('digital')" aria-label="Digital Optimization">
+      <div class="svc-arr" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      <div class="svc-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <div class="svc-t">Digital Optimization</div>
+      <div class="svc-d">Master Data Harmonisierung, Digital Upskilling, Advanced Analytics und KI/ML-gestützte Entscheidungsunterstützung.</div>
+    </div>
+    <!-- 5 -->
+    <div class="svc-card" role="listitem" tabindex="0" onclick="showDetail('consulting')" onkeydown="if(event.key==='Enter')showDetail('consulting')" aria-label="Consulting & Integration">
+      <div class="svc-arr" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+      <div class="svc-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+      <div class="svc-t">Consulting &amp; Integration</div>
+      <div class="svc-d">Beschaffungsstrategie, Lieferantenportfolio-Optimierung, Logistiknetzwerk-Design und Operational-Excellence-Programme.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ L1: PLATFORMS ══════════════════════ -->
+<div id="panel-platforms" class="panel l1" role="main" aria-label="Platforms">
+  <div class="ph">
+    <button class="back-btn" onclick="goHome()" aria-label="Zurück"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Zurück</button>
+    <div>
+      <div class="bc"><a onclick="goHome()" tabindex="0">Home</a> › Platforms</div>
+      <h2>Digitale <span>Platforms</span></h2>
+    </div>
+  </div>
+  <div class="plt-grid" role="list">
+    <div class="plt-card" role="listitem" tabindex="0" aria-label="GCT Portal">
+      <div class="plt-logo">GCT Logo</div>
+      <div class="plt-name">GCT Portal</div>
+      <div class="plt-tag">Sub-Contractor Management</div>
+      <p class="plt-desc">Zentrales Portal für das gesamte Sub-Contractor-Ökosystem. Onboarding, Performance-Tracking, Compliance-Management und Collaboration in einer integrierten Plattform.</p>
+      <button class="cta" aria-label="Mehr über GCT Portal erfahren">Mehr erfahren <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+    </div>
+    <div class="plt-card" role="listitem" tabindex="0" aria-label="forward sensing">
+      <div class="plt-logo">fs Logo</div>
+      <div class="plt-name">forward sensing</div>
+      <div class="plt-tag">Digital Twin of your SC</div>
+      <p class="plt-desc">Lebendiger Digital Twin der gesamten Lieferkette. Echtzeit-Visibilität, Predictive Analytics und Szenario-Modellierung – Risiken erkennen, bevor sie entstehen.</p>
+      <button class="cta" aria-label="Mehr über forward sensing erfahren">Mehr erfahren <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+    </div>
+    <div class="plt-card" role="listitem" tabindex="0" aria-label="pacemaker.ai S&OP">
+      <div class="plt-logo">pm.ai</div>
+      <div class="plt-name">pacemaker.ai</div>
+      <div class="plt-tag">Digital S&amp;OP Platform</div>
+      <p class="plt-desc">KI-gestütztes Sales &amp; Operations Planning – von der Demand Sensing bis zum Konsens-Plan. Hebt S&amp;OP von einem monatlichen Prozess zu einer Echtzeit-Steuerungslogik.</p>
+      <button class="cta" aria-label="Mehr über pacemaker.ai S&OP erfahren">Mehr erfahren <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+    </div>
+    <div class="plt-card" role="listitem" tabindex="0" aria-label="pacemaker.ai Sustainability">
+      <div class="plt-logo">pm.ai</div>
+      <div class="plt-name">pacemaker.ai</div>
+      <div class="plt-tag">Sustainability Management</div>
+      <p class="plt-desc">Umfassendes ESG-Datenmanagement, CO₂-Footprint-Tracking und Nachhaltigkeitsreporting entlang der gesamten Supply Chain – regulatorische Compliance als Wettbewerbsvorteil.</p>
+      <button class="cta" aria-label="Mehr über pacemaker.ai Sustainability erfahren">Mehr erfahren <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ L1: INDUSTRIES ═════════════════════ -->
+<div id="panel-industries" class="panel l1" role="main" aria-label="Industries">
+  <div class="ph">
+    <button class="back-btn" onclick="goHome()" aria-label="Zurück"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Zurück</button>
+    <div>
+      <div class="bc"><a onclick="goHome()" tabindex="0">Home</a> › Industries</div>
+      <h2>Unsere <span>Industrien</span></h2>
+    </div>
+  </div>
+  <div class="ind-grid" role="list">
+    <!-- Aerospace -->
+    <div class="ind-card" role="listitem" tabindex="0" aria-label="Aerospace">
+      <div class="ind-bg" style="background-image:url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=800&q=80')" role="img" aria-label="Flugzeug Triebwerk"></div>
+      <div class="ind-ov"></div>
+      <div class="ind-cnt">
+        <div class="ind-ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></div>
+        <div class="ind-n">Aerospace</div>
+        <div class="ind-s">Präzise Lieferketten für Luftfahrt &amp; Raumfahrt</div>
+      </div>
+    </div>
+    <!-- Defense -->
+    <div class="ind-card" role="listitem" tabindex="0" aria-label="Defense">
+      <div class="ind-bg" style="background-image:url('https://images.unsplash.com/photo-1579215237717-41ade2efcf40?auto=format&fit=crop&w=800&q=80')" role="img" aria-label="Verteidigungstechnologie"></div>
+      <div class="ind-ov"></div>
+      <div class="ind-cnt">
+        <div class="ind-ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="ind-n">Defense</div>
+        <div class="ind-s">Mission-critical Supply Chain Solutions</div>
+      </div>
+    </div>
+    <!-- Automotive / EV -->
+    <div class="ind-card" role="listitem" tabindex="0" aria-label="Automotive & Electric Vehicles">
+      <div class="ind-bg" style="background-image:url('https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=800&q=80')" role="img" aria-label="Elektrofahrzeug Ladestation"></div>
+      <div class="ind-ov"></div>
+      <div class="ind-cnt">
+        <div class="ind-ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div>
+        <div class="ind-n">Automotive / Electric Vehicles</div>
+        <div class="ind-s">EV-ready Supply Chains für die Zukunft</div>
+      </div>
+    </div>
+    <!-- Industrial -->
+    <div class="ind-card" role="listitem" tabindex="0" aria-label="Industrial & Manufacturing">
+      <div class="ind-bg" style="background-image:url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80')" role="img" aria-label="Gelbe Baumaschinen"></div>
+      <div class="ind-ov"></div>
+      <div class="ind-cnt">
+        <div class="ind-ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+        <div class="ind-n">Industrial &amp; Manufacturing</div>
+        <div class="ind-s">Yellow Goods &amp; Heavy Equipment Logistics</div>
+      </div>
+    </div>
+    <!-- Renewable -->
+    <div class="ind-card" role="listitem" tabindex="0" aria-label="Renewable Energies">
+      <div class="ind-bg" style="background-image:url('https://images.unsplash.com/photo-1466611653911-95081537e5b7?auto=format&fit=crop&w=800&q=80')" role="img" aria-label="Windkraftanlagen"></div>
+      <div class="ind-ov"></div>
+      <div class="ind-cnt">
+        <div class="ind-ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v6.5l5.5 3.5M12 2L6.5 12 12 8.5"/><circle cx="12" cy="12" r="3"/><path d="M12 15V22M6.5 12H2M21.5 12H17"/></svg></div>
+        <div class="ind-n">Renewable Energies</div>
+        <div class="ind-s">Grüne Lieferketten für eine nachhaltige Zukunft</div>
+      </div>
+    </div>
+    <!-- 3PL -->
+    <div class="ind-card" role="listitem" tabindex="0" aria-label="3PL / Supply Chain">
+      <div class="ind-bg" style="background-image:url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80')" role="img" aria-label="Modernes Logistikzentrum"></div>
+      <div class="ind-ov"></div>
+      <div class="ind-cnt">
+        <div class="ind-ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+        <div class="ind-n">3PL / Supply Chain</div>
+        <div class="ind-s">End-to-end Logistics &amp; Fulfillment Networks</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ L2: MATERIALS ══════════════════════ -->
+<div id="detail-materials" class="panel l2" role="main" aria-label="Materials Supply & Processing Detail">
+  <div class="ph">
+    <button class="back-btn" onclick="showPanel('services')" aria-label="Zurück zu Services"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Services</button>
+    <div>
+      <div class="bc"><a onclick="goHome()" tabindex="0">Home</a> › <a onclick="showPanel('services')" tabindex="0">Services</a> › Materials Supply</div>
+      <h2>Materials Supply <span>&amp; Processing</span></h2>
+    </div>
+  </div>
+  <div class="det-hero" aria-label="Materials Supply Banner">
+    <div class="det-bg" style="background-image:url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1400&q=80')" role="img" aria-label="Industrielle Fertigung"></div>
+    <div class="det-ov"></div>
+    <div class="det-hc"><div class="det-eye">Service Cluster 01</div><div class="det-title">Strategic Sourcing &amp; Supply</div></div>
+  </div>
+  <div class="det-grid">
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>Materials / Engineering Expertise</h3><ul class="cl-list" role="list"><li>Werkstofftechnische Expertise über Metalle, Composites, Polymere und Spezialwerkstoffe</li><li>Technische Spezifikationsprüfung und Fertigbarkeitsanalysen</li><li>Materialsubstitution und Value Engineering</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Global Sourcing</h3><ul class="cl-list" role="list"><li>Multi-Region Lieferantenidentifikation und -qualifikation</li><li>Make-or-Buy-Entscheidungen und Total Cost of Ownership Analyse</li><li>Dual Sourcing und geografische Risikostreuung</li><li>Langfristige Lieferantenpartnerschaften und Rahmenverträge</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Quality &amp; Claim Management</h3><ul class="cl-list" role="list"><li>Wareneingangsprüfung und Lieferantenauditprogramme</li><li>Non-Conformance-Management und 8D-Problemlösung</li><li>Claim-Bearbeitung, Root Cause Analysis und Corrective Actions</li><li>AS9100, IATF 16949 und ISO 9001 Compliance-Unterstützung</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Inventory Management &amp; Risk-Optimized Safety Stock</h3><ul class="cl-list" role="list"><li>Statistische Sicherheitsbestandsmodellierung und bedarfsgesteuerte Disposition</li><li>Supply-Risk-Assessment und Pufferbestandsstrategien</li><li>Vendor Managed Inventory (VMI) und Konsignationsprogramme</li><li>ABC/XYZ-Klassifikation und Langsamdrehermanagement</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>First-stage Processing, Fabrication &amp; CNC Machining</h3><ul class="cl-list" role="list"><li>Rohmaterial-Erstbearbeitung: Schneiden, Umformen und Oberflächenbehandlung</li><li>Präzisions-CNC-Bearbeitung für komplexe Bauteile</li><li>Blechbearbeitung, Schweißen und Montagezulieferung</li><li>Qualitätskontrollierte Fab-to-Ship-Logistikintegration</li></ul></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ L2: LOGISTICS ══════════════════════ -->
+<div id="detail-logistics" class="panel l2" role="main" aria-label="Logistics & Fulfillment Detail">
+  <div class="ph">
+    <button class="back-btn" onclick="showPanel('services')" aria-label="Zurück zu Services"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Services</button>
+    <div>
+      <div class="bc"><a onclick="goHome()" tabindex="0">Home</a> › <a onclick="showPanel('services')" tabindex="0">Services</a> › Logistics</div>
+      <h2>Logistics <span>&amp; Fulfillment</span></h2>
+    </div>
+  </div>
+  <div class="det-hero">
+    <div class="det-bg" style="background-image:url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1400&q=80')" role="img" aria-label="Modernes Logistikzentrum"></div>
+    <div class="det-ov"></div>
+    <div class="det-hc"><div class="det-eye">Service Cluster 02</div><div class="det-title">3rd Party Logistics</div></div>
+  </div>
+  <div class="det-grid">
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Dedicated Transportation &amp; TMS</h3><ul class="cl-list" role="list"><li>Dedicated Fleet Management und Carrier-Netzwerkoptimierung</li><li>Transportation Management System (TMS) Implementierung und Betrieb</li><li>Multimodale Transportlösungen: Straße, Schiene, Luft, See</li><li>Last-Mile-Delivery und AOG-Logistik</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Multi-Client Warehousing &amp; Contract Logistics</h3><ul class="cl-list" role="list"><li>Shared- und Dedicated-Warehouse-Infrastruktur an strategischen Standorten</li><li>WMS-gesteuerte Bestandsverwaltung mit Echtzeit-Visibilität</li><li>Value-Added Services: Etikettierung, Umverpackung, Qualitätsprüfung</li><li>Contract Logistics mit SLA-gesteuertem Performance Management</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Kitting &amp; Light Assembly</h3><ul class="cl-list" role="list"><li>Komponenten-Kitting und Sequenzierung für die Linienbelieferung</li><li>Light Assembly, Sub-Assembly und Konfigurationsservices</li><li>Individualverpackung und produktspezifische Kitting-Lösungen</li><li>Kanban-gesteuerte Materialflussintegration</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Just in Time &amp; Sequencing Services</h3><ul class="cl-list" role="list"><li>JIT/JIS-Lieferorchestrierung direkt an die Produktionslinie</li><li>Sequenzgenaue Lieferung abgestimmt auf Kundenproduktionstakte</li><li>EDI/API-Integration mit Kunden-ERP und MES-Systemen</li><li>Puffermanagement und Bedarfsschwankungsabsorption</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><rect x="9" y="8" width="7" height="10"/></svg>FTZ &amp; Bonded Warehousing</h3><ul class="cl-list" role="list"><li>Freihandelszonenlager für Zolloptimierung</li><li>Zolllagerbetrieb mit Compliance-Management</li><li>Einfuhrabgabenaufschub und Rückerstattungsprogramme</li><li>Grenzüberschreitende Handelsabwicklung und AEO-Unterstützung</li></ul></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ L2: RESILIENCE ═════════════════════ -->
+<div id="detail-resilience" class="panel l2" role="main" aria-label="Supply Chain Resilience Detail">
+  <div class="ph">
+    <button class="back-btn" onclick="showPanel('services')" aria-label="Zurück zu Services"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Services</button>
+    <div>
+      <div class="bc"><a onclick="goHome()" tabindex="0">Home</a> › <a onclick="showPanel('services')" tabindex="0">Services</a> › Resilience</div>
+      <h2>Supply Chain <span>Resilience</span></h2>
+    </div>
+  </div>
+  <div class="det-hero">
+    <div class="det-bg" style="background-image:url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1400&q=80')" role="img" aria-label="Data Analytics Dashboard"></div>
+    <div class="det-ov"></div>
+    <div class="det-hc"><div class="det-eye">Service Cluster 03</div><div class="det-title">Unzerbrechliche Lieferketten aufbauen</div></div>
+  </div>
+  <div class="det-grid">
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>End-to-end Multi-Tier Transparency</h3><ul class="cl-list" role="list"><li>N-Tier Lieferantenmapping und Transparenz über Tier 1 hinaus</li><li>Echtzeit-Supply-Chain-Event-Monitoring und Alerting</li><li>Lieferantenbonitäts- und Risikoscoring</li><li>Konzentrationsrisikoanalyse über Regionen und Warengruppen</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Strategic Material Aggregation &amp; Positioning</h3><ul class="cl-list" role="list"><li>Identifikation kritischer Materialien und strategische Pufferprogramme</li><li>Gebündeltes Sourcing für Hebelwirkung und Resilienz</li><li>Entkopplungspunktoptimierung im Liefernetzwerk</li><li>Commodity-Risiko-Hedging-Strategien</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Forward Sensing &amp; Forecasting</h3><ul class="cl-list" role="list"><li>KI-gestützte Bedarfsprognose mit externen Signalinputs</li><li>Supply-Risk-Frühwarnsysteme und Störungsvorhersage</li><li>Durchlaufzeitvarianzmonitoring und dynamische Sicherheitsbestandsanpassung</li><li>Marktintelligenz und Rohstoffpreisvorhersage</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Scenario Modeling &amp; Stress-Testing</h3><ul class="cl-list" role="list"><li>What-if-Szenarioanalyse für Nachfragespitzen, Lieferausfälle und geopolitische Ereignisse</li><li>Playbook-Entwicklung für Supply-Chain-Krisenreaktion</li><li>Resilience-KPI-Definition und Monitoring-Dashboards</li><li>Business-Continuity-Planung und Recovery-Time-Optimierung</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Regulatory Governance: Sustainability, Compliance &amp; ESG</h3><ul class="cl-list" role="list"><li>CSRD / EUDR / LkSG Compliance-Management und Reporting</li><li>Lieferanten-ESG-Bewertung und Scoring-Programme</li><li>CO₂-Footprint-Messung Scope 1, 2 und 3</li><li>Conflict Mineral Reporting (CMRT) und Human-Rights-Due-Diligence</li></ul></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ L2: DIGITAL ════════════════════════ -->
+<div id="detail-digital" class="panel l2" role="main" aria-label="Digital Optimization Detail">
+  <div class="ph">
+    <button class="back-btn" onclick="showPanel('services')" aria-label="Zurück zu Services"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Services</button>
+    <div>
+      <div class="bc"><a onclick="goHome()" tabindex="0">Home</a> › <a onclick="showPanel('services')" tabindex="0">Services</a> › Digital</div>
+      <h2>Digital <span>Optimization</span></h2>
+    </div>
+  </div>
+  <div class="det-hero">
+    <div class="det-bg" style="background-image:url('https://images.unsplash.com/photo-1518186285589-2f7649de83e0?auto=format&fit=crop&w=1400&q=80')" role="img" aria-label="Digitale Technologie und Datenvisualisierung"></div>
+    <div class="det-ov"></div>
+    <div class="det-hc"><div class="det-eye">Service Cluster 04</div><div class="det-title">Data &amp; Digital Enablement</div></div>
+  </div>
+  <div class="det-grid">
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>Master Data Harmonization &amp; Data Strategy</h3><ul class="cl-list" role="list"><li>Supply-Chain-Stammdaten-Audit, Bereinigung und Governance-Frameworks</li><li>Datenarchitekturdesign für integrierte SC-Visibilität</li><li>ERP/PLM/SCM-Systemintegration und Datenpipeline-Entwicklung</li><li>Datenqualitäts-KPIs und kontinuierliche Verbesserungsprogramme</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Digital Upskilling &amp; Training</h3><ul class="cl-list" role="list"><li>SC-Digitalisierungs-Trainingsprogramme für Operations-Teams</li><li>Data Literacy und Analytics-Tool-Adoptionsprogramme</li><li>Change Management für digitale Transformationsinitiativen</li><li>Custom E-Learning und Blended-Learning-Curricula</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Advanced Analytics &amp; AI/ML Decision Making</h3><ul class="cl-list" role="list"><li>Predictive Analytics für Bedarf, Supply und Bestandsoptimierung</li><li>Machine-Learning-Modelle für Lieferantenrisikoscoring und Anomalieerkennung</li><li>KI-gestützte Spend-Analyse und Potenzialidentifikation</li><li>Custom Dashboard- und Visualisierungsentwicklung (Power BI, Tableau)</li><li>Generative-KI-Integration für SC-Dokumentenverarbeitung</li></ul></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ L2: CONSULTING ════════════════════ -->
+<div id="detail-consulting" class="panel l2" role="main" aria-label="Consulting & Integration Detail">
+  <div class="ph">
+    <button class="back-btn" onclick="showPanel('services')" aria-label="Zurück zu Services"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Services</button>
+    <div>
+      <div class="bc"><a onclick="goHome()" tabindex="0">Home</a> › <a onclick="showPanel('services')" tabindex="0">Services</a> › Consulting</div>
+      <h2>Consulting <span>&amp; Integration</span></h2>
+    </div>
+  </div>
+  <div class="det-hero">
+    <div class="det-bg" style="background-image:url('https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1400&q=80')" role="img" aria-label="Diverses professionelles Team im Meeting"></div>
+    <div class="det-ov"></div>
+    <div class="det-hc"><div class="det-eye">Service Cluster 05</div><div class="det-title">Procurement Strategy &amp; SC Ecosystems</div></div>
+  </div>
+  <div class="det-grid">
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Optimized Supplier Portfolio &amp; Management</h3><ul class="cl-list" role="list"><li>Lieferantensegmentierung und Portfoliobereinigung</li><li>Preferred-Supplier-Programm-Design und Governance</li><li>Lieferantenperformance-Scorecards und Review-Zyklen</li><li>Strategische Partnerschaftsrahmen und Innovationsscouting</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Geographic &amp; Sourcing Risk Mitigation</h3><ul class="cl-list" role="list"><li>Geopolitisches Risiko-Assessment und Near-/Friendshoring-Strategien</li><li>China+1, Europe+1 und Multi-Region-Sourcing-Strategien</li><li>SC-Mapping für Sanktions- und Exportkontroll-Compliance</li><li>Resilienzinvestitions-Priorisierungsrahmen</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Supplier Development</h3><ul class="cl-list" role="list"><li>Lieferantenfähigkeitsbewertungen und Gap-Analysen</li><li>Qualitäts-, Liefer- und Kostenverbesserungsprogramme</li><li>Lean / Six Sigma Coaching und Kaizen-Begleitung beim Lieferanten</li><li>Technologietransfer und Produktionshochlauf-Unterstützung</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/></svg>Transportation &amp; Distribution Network Optimization</h3><ul class="cl-list" role="list"><li>Netzwerkdesign und DC-Standortoptimierungsstudien</li><li>Transportkosten-Benchmarking und Carrierverhandlungen</li><li>Modal-Shift-Analyse (Straße→Schiene, Luft→See)</li><li>Incoterms-Optimierung und Landed-Cost-Analyse</li></ul></div>
+    <div class="cluster"><h3 class="cl-t"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Operational Excellence &amp; Performance Optimization</h3><ul class="cl-list" role="list"><li>Supply-Chain-Reifegradassessments und Benchmarking</li><li>KPI-Framework-Design und Balanced-Scorecard-Implementierung</li><li>Prozessredesign und Verschwendungselimination entlang der Wertschöpfungskette</li><li>Kontinuierliche Verbesserungskultur und Governance-Programme</li></ul></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ FOOTER ════════════════════════════ -->
+<footer>
+  <div class="ft-inner">
+    <div class="ft-top">
+      <div class="ft-brand">
+        <div class="logo-name" style="font-size:1.8rem">tkxx<span style="color:var(--tk-cyan)">*</span></div>
+        <p class="ft-tag">Your Global Control Tower for end-to-end Supply Chain Excellence.</p>
+      </div>
+      <div class="ft-cols">
+        <div class="ft-col">
+          <h4>Services</h4>
+          <ul>
+            <li><a onclick="showDetail('materials')">Materials Supply</a></li>
+            <li><a onclick="showDetail('logistics')">Logistics &amp; Fulfillment</a></li>
+            <li><a onclick="showDetail('resilience')">SC Resilience</a></li>
+            <li><a onclick="showDetail('digital')">Digital Optimization</a></li>
+            <li><a onclick="showDetail('consulting')">Consulting</a></li>
+          </ul>
+        </div>
+        <div class="ft-col">
+          <h4>Platforms</h4>
+          <ul>
+            <li><a onclick="showPanel('platforms')">GCT Portal</a></li>
+            <li><a onclick="showPanel('platforms')">forward sensing</a></li>
+            <li><a onclick="showPanel('platforms')">pacemaker.ai S&amp;OP</a></li>
+            <li><a onclick="showPanel('platforms')">pacemaker.ai ESG</a></li>
+          </ul>
+        </div>
+        <div class="ft-col">
+          <h4>Unternehmen</h4>
+          <ul>
+            <li><a href="#">Über tkxx*</a></li>
+            <li><a href="#">Impressum</a></li>
+            <li><a href="#">Datenschutz</a></li>
+            <li><a href="#">Kontakt</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="ft-bot">
+      <p class="ft-copy">© 2025 tkxx* · Alle Rechte vorbehalten.</p>
+      <div class="socials" role="list">
+        <a class="soc" role="listitem" href="#" aria-label="LinkedIn" tabindex="0">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+        <a class="soc" role="listitem" href="#" aria-label="XING" tabindex="0">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.188 0c-.517 0-.741.325-.927.66 0 0-7.455 13.224-7.702 13.657.015.024 4.919 9.023 4.919 9.023.17.308.436.66.967.66h3.454c.211 0 .375-.078.463-.22.089-.151.089-.346-.009-.536l-4.879-8.916c-.004-.006-.004-.016 0-.022L22.139.756c.095-.191.097-.387.006-.535C22.056.078 21.894 0 21.686 0h-3.498zM3.648 4.74c-.211 0-.385.074-.473.216-.09.149-.078.339.02.531l2.34 4.05c.004.01.004.016 0 .021L1.86 16.051c-.099.188-.093.381 0 .529.085.142.249.22.456.22h3.461c.518 0 .766-.348.945-.667l3.734-6.609-2.378-4.155c-.172-.307-.434-.629-.962-.629H3.648v.001z"/></svg>
+        </a>
+        <a class="soc" role="listitem" href="#" aria-label="X / Twitter" tabindex="0">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── STATE ──
+let curLevel = 0, curL1 = null, curL2 = null;
+const stack = [];
+
+// ── HELPERS ──
+function hideAll() {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+}
+
+function animateIn(panelEl) {
+  const items = panelEl.querySelectorAll('.svc-card,.plt-card,.ind-card,.cluster');
+  items.forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(22px)';
+    el.style.transition = 'none';
+    setTimeout(() => {
+      el.style.transition = 'opacity 0.4s ease, transform 0.4s ease, background 0.28s, border-color 0.28s, box-shadow 0.28s';
+      el.style.opacity = '1';
+      el.style.transform = 'translateY(0)';
+    }, 60 + i * 70);
+  });
+}
+
+// ── NAV ──
+function showPanel(name, e) {
+  if (e) e.preventDefault();
+  stack.push({ level: curLevel, l1: curL1, l2: curL2 });
+  curLevel = 1; curL1 = name; curL2 = null;
+  hideAll();
+  const el = document.getElementById('panel-' + name);
+  if (el) { el.classList.add('active'); el.scrollTop = 0; animateIn(el); }
+  history.pushState({ level:1, l1:name }, '', '#' + name);
+}
+
+function showDetail(name, e) {
+  if (e) e.preventDefault();
+  stack.push({ level: curLevel, l1: curL1, l2: curL2 });
+  curLevel = 2; curL1 = 'services'; curL2 = name;
+  hideAll();
+  const el = document.getElementById('detail-' + name);
+  if (el) { el.classList.add('active'); el.scrollTop = 0; animateIn(el); }
+  history.pushState({ level:2, l2:name }, '', '#' + name);
+}
+
+function goHome(e) {
+  if (e) e.preventDefault();
+  stack.length = 0;
+  curLevel = 0; curL1 = null; curL2 = null;
+  hideAll();
+  history.pushState({ level:0 }, '', location.pathname);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── BROWSER BACK ──
+window.addEventListener('popstate', e => {
+  const s = e.state;
+  if (!s || s.level === 0) { hideAll(); curLevel = 0; return; }
+  if (s.level === 1) {
+    hideAll();
+    const el = document.getElementById('panel-' + s.l1);
+    if (el) { el.classList.add('active'); animateIn(el); }
+    curLevel = 1; curL1 = s.l1;
+  }
+  if (s.level === 2) {
+    hideAll();
+    const el = document.getElementById('detail-' + s.l2);
+    if (el) { el.classList.add('active'); animateIn(el); }
+    curLevel = 2; curL2 = s.l2;
+  }
+});
+
+// ── PARALLAX ──
+const bg = document.getElementById('parallax-bg');
+window.addEventListener('scroll', () => {
+  if (curLevel === 0 && bg) bg.style.transform = `scale(1.08) translateY(${scrollY * 0.25}px)`;
+}, { passive: true });
+
+// ── KEYBOARD ESC ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (curLevel === 2) showPanel('services');
+    else if (curLevel === 1) goHome();
+  }
+});
+
+// ── INIT ──
+history.replaceState({ level: 0 }, '', location.href);
+</script>
+</body>
+</html>
